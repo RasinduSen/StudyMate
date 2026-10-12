@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function Dashboard({ user, setUser }) {
 
   const handleLogout = () => {
@@ -44,9 +46,12 @@ function Dashboard({ user, setUser }) {
             Your Assignments
           </h3>
 
-          <button className="rounded-lg bg-indigo-600 px-5 py-2.5 font-semibold text-white hover:bg-indigo-700">
+          <Link
+            to="/assignments/new"
+            className="rounded-lg bg-indigo-600 px-5 py-2.5 font-semibold text-white hover:bg-indigo-700"
+          >
             + New Assignment
-          </button>
+          </Link>
 
         </div>
 

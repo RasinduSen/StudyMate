@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import './App.css'
 import Dashboard from './pages/Dashboard'
+import { Routes, Route } from 'react-router-dom'
+import NewAssignment from './pages/NewAssignment'
 
 function App() {
   const [isLogin, setIsLogin] = useState(false)
@@ -147,8 +149,20 @@ function App() {
   }
 
   if (user) {
-    return <Dashboard user={user} setUser={setUser}/>
-  }
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={<Dashboard user={user} setUser={setUser} />}
+      />
+
+      <Route
+        path="/assignments/new"
+        element={<NewAssignment />}
+      />
+    </Routes>
+  )
+}
 
   return (
     <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4">
