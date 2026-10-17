@@ -4,6 +4,15 @@ const sequelize = require('./config/database')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('./models/User')
+const Assignment = require('./models/Assignment')
+
+User.hasMany(Assignment,{
+  foreignKey: 'userID',
+})
+
+Assignment.belongsTo(User,{
+  foreignKey : 'userId'
+})
 
 const app = express()
 const PORT = 5000
