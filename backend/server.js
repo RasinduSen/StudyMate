@@ -6,12 +6,12 @@ const jwt = require('jsonwebtoken')
 const User = require('./models/User')
 const Assignment = require('./models/Assignment')
 
-User.hasMany(Assignment,{
-  foreignKey: 'userID',
+User.hasMany(Assignment, {
+  foreignKey: 'userId',
 })
 
-Assignment.belongsTo(User,{
-  foreignKey : 'userId'
+Assignment.belongsTo(User, {
+  foreignKey: 'userId'
 })
 
 const app = express()
@@ -196,6 +196,36 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
     res.status(500).json({
       message: 'Something went wrong',
+    })
+  }
+})
+
+app.post('/api/assignments', authenticateToken, async (req, res) => {
+  try {
+    const { title, brief, dueDate } = req.body
+
+    if (!title || !brief || !dueDate) {
+      return res.status(400).json({
+        message: 'Title, brief and due date are required',
+      })
+    }
+
+    const assignment = await Assignment.create({
+      userId: req.user.userId,
+      title,
+      brief,
+      dueDate,
+    })
+
+    res.status(201).json({
+      message: 'Assignment created successfully',
+      assignment,
+    })
+  } catch (error) {
+    console.error('Create assignment error:', error)
+
+    res.status(500).json({
+      message: 'Something went wrong while creating the assignment',
     })
   }
 })

@@ -9,7 +9,7 @@ const Assignment = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    userID:{
+    userId:{
         type: DataTypes.INTEGER,
         allowNull: false,
         field: 'user_id'
