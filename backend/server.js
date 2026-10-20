@@ -230,6 +230,27 @@ app.post('/api/assignments', authenticateToken, async (req, res) => {
   }
 })
 
+app.get('/api/assignments', authenticateToken, async (req, res) => {
+  try {
+    const assignments = await Assignment.findAll({
+      where: {
+        userId: req.user.userId,
+      },
+      order: [['dueDate', 'ASC']],
+    })
+
+    res.status(200).json({
+      assignments,
+    })
+  } catch (error) {
+    console.error('Get assignments error:', error)
+
+    res.status(500).json({
+      message: 'Something went wrong while getting assignments',
+    })
+  }
+})
+
 sequelize
   .authenticate()
   .then(() => {

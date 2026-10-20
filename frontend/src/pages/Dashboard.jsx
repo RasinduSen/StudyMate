@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 
 function Dashboard({ user, setUser }) {
 
@@ -6,7 +7,37 @@ function Dashboard({ user, setUser }) {
     localStorage.removeItem('token')
     setUser(null)
   }
+  const [assignments, setAssignments] = useState([])
 
+  useEffect(() => {
+    const fetchAssignments = async () => {
+      try {
+        const token = localStorage.getItem('token')
+
+        const response = await fetch(
+          'http://localhost:5000/api/assignments',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          console.error(data.message)
+          return
+        }
+
+        setAssignments(data.assignments)
+      } catch (error) {
+        console.error('Get assignments error:', error)
+      }
+    }
+
+    fetchAssignments()
+  }, [])
   return (
     <div className="min-h-screen bg-slate-100">
 
@@ -56,17 +87,38 @@ function Dashboard({ user, setUser }) {
         </div>
 
         {/* Empty state */}
-        <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
+        {assignments.length === 0 ? (
+          <div className="mt-6 rounded-xl border border-dashed border-gray-300 bg-white p-12 text-center">
+            <h4 className="text-lg font-semibold text-gray-800">
+              No assignments yet
+            </h4>
 
-          <h4 className="text-lg font-semibold text-gray-800">
-            No assignments yet
-          </h4>
+            <p className="mt-2 text-gray-500">
+              Create your first assignment and let StudyMate build your plan.
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 grid gap-4">
+            {assignments.map((assignment) => (
+              <div
+                key={assignment.id}
+                className="rounded-xl bg-white p-6 shadow-sm border border-gray-200"
+              >
+                <h4 className="text-lg font-semibold text-gray-900">
+                  {assignment.title}
+                </h4>
 
-          <p className="mt-2 text-gray-500">
-            Create your first assignment and let StudyMate build your plan.
-          </p>
+                <p className="mt-2 text-gray-600">
+                  {assignment.brief}
+                </p>
 
-        </div>
+                <p className="mt-4 text-sm font-medium text-indigo-600">
+                  Due: {assignment.dueDate}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
 
       </main>
 
