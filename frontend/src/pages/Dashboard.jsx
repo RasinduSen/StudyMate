@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 
+
 function Dashboard({ user, setUser }) {
 
   const handleLogout = () => {
@@ -8,6 +9,8 @@ function Dashboard({ user, setUser }) {
     setUser(null)
   }
   const [assignments, setAssignments] = useState([])
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -38,6 +41,47 @@ function Dashboard({ user, setUser }) {
 
     fetchAssignments()
   }, [])
+
+  const handleDelete = async (assignment) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${assignment.title}"?`
+    )
+
+    if (!confirmed) return
+
+    setDeletingId(assignment.id)
+    setDeleteError('')
+
+    try {
+      const token = localStorage.getItem('token')
+
+      const response = await fetch(
+        `http://localhost:5000/api/assignments/${assignment.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to delete assignment.')
+      }
+
+      setAssignments((currentAssignments) =>
+        currentAssignments.filter((item) => item.id !== assignment.id)
+      )
+    } catch (error) {
+      console.error('Delete assignment error:', error)
+      setDeleteError(error.message || 'Could not delete the assignment.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-100">
 
@@ -83,8 +127,13 @@ function Dashboard({ user, setUser }) {
           >
             + New Assignment
           </Link>
-
         </div>
+
+        {deleteError && (
+          <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            {deleteError}
+          </p>
+        )}
 
         {/* Empty state */}
         {assignments.length === 0 ? (
@@ -104,17 +153,29 @@ function Dashboard({ user, setUser }) {
                 key={assignment.id}
                 className="rounded-xl bg-white p-6 shadow-sm border border-gray-200"
               >
-                <h4 className="text-lg font-semibold text-gray-900">
-                  {assignment.title}
-                </h4>
+                <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="text-lg font-semibold text-gray-900">
+                      {assignment.title}
+                    </h4>
 
-                <p className="mt-2 text-gray-600">
-                  {assignment.brief}
-                </p>
+                    <p className="mt-2 text-gray-600">
+                      {assignment.brief}
+                    </p>
 
-                <p className="mt-4 text-sm font-medium text-indigo-600">
-                  Due: {assignment.dueDate}
-                </p>
+                    <p className="mt-4 text-sm font-medium text-indigo-600">
+                      Due: {assignment.dueDate}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => handleDelete(assignment)}
+                    disabled={deletingId === assignment.id}
+                    className="self-start rounded-lg border border-red-200 px-4 py-2 font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+                  >
+                    {deletingId === assignment.id ? 'Deleting...' : 'Delete'}
+                  </button>
+                </div>
               </div>
             ))}
           </div>

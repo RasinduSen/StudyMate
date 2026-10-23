@@ -5,6 +5,7 @@ const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const User = require('./models/User')
 const Assignment = require('./models/Assignment')
+const analyzeAssignment = require('./ai/geminiService')
 
 User.hasMany(Assignment, {
   foreignKey: 'userId',
@@ -250,6 +251,94 @@ app.get('/api/assignments', authenticateToken, async (req, res) => {
     })
   }
 })
+
+
+app.delete('/api/assignments/:id', authenticateToken, async (req, res) => {
+  try {
+    const assignmentId = Number(req.params.id)
+
+    if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
+      return res.status(400).json({
+        message: 'Invalid assignment ID',
+      })
+    }
+
+    const deletedCount = await Assignment.destroy({
+      where: {
+        id: assignmentId,
+        userId: req.user.userId,
+      },
+    })
+
+    if (deletedCount === 0) {
+      return res.status(404).json({
+        message: 'Assignment not found',
+      })
+    }
+
+    return res.status(200).json({
+      message: 'Assignment deleted successfully',
+    })
+  } catch (error) {
+    console.error('Delete assignment error:', error)
+
+    return res.status(500).json({
+      message: 'Something went wrong while deleting the assignment',
+    })
+  }
+})
+
+
+app.post(
+  '/api/assignments/:id/analyze',
+  authenticateToken,
+  async (req, res) => {
+    console.log('Analyze route reached. Assignment ID:', req.params.id)
+    const assignmentId = Number(req.params.id)
+
+    if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
+      return res.status(400).json({
+        message: 'Invalid assignment ID',
+      })
+    }
+
+    try {
+      // Find the assignment only if it belongs to the logged-in user.
+      const assignment = await Assignment.findOne({
+        where: {
+          id: assignmentId,
+          userId: req.user.userId,
+        },
+      })
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: 'Assignment not found',
+        })
+      }
+
+      // Ask Gemini to analyse the saved assignment.
+      const analysis = await analyzeAssignment({
+        title: assignment.title,
+        brief: assignment.brief,
+        dueDate: assignment.dueDate,
+      })
+
+      res.status(200).json({
+        message: 'Assignment analyzed successfully',
+        assignmentId: assignment.id,
+        analysis,
+      })
+    } catch (error) {
+      console.error('Analyze assignment error:', error)
+
+      res.status(502).json({
+        message:
+          'Unable to analyze this assignment right now. Please try again later.',
+      })
+    }
+  }
+)
 
 sequelize
   .authenticate()
