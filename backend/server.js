@@ -6,6 +6,8 @@ const jwt = require('jsonwebtoken')
 const User = require('./models/User')
 const Assignment = require('./models/Assignment')
 const analyzeAssignment = require('./ai/geminiService')
+const AIStudyPlan = require('./models/AIStudyPlan')
+const StudyTask = require('./models/StudyTask')
 
 User.hasMany(Assignment, {
   foreignKey: 'userId',
@@ -13,6 +15,24 @@ User.hasMany(Assignment, {
 
 Assignment.belongsTo(User, {
   foreignKey: 'userId'
+})
+
+Assignment.hasOne(AIStudyPlan, {
+  foreignKey: 'assignmentId',
+  onDelete: 'CASCADE',
+})
+
+AIStudyPlan.belongsTo(Assignment, {
+  foreignKey: 'assignmentId',
+})
+
+AIStudyPlan.hasMany(StudyTask, {
+  foreignKey: 'aiStudyPlanId',
+  onDelete: 'CASCADE',
+})
+
+StudyTask.belongsTo(AIStudyPlan, {
+  foreignKey: 'aiStudyPlanId',
 })
 
 const app = express()
@@ -323,6 +343,51 @@ app.post(
         brief: assignment.brief,
         dueDate: assignment.dueDate,
       })
+
+      const existingPlan = await AIStudyPlan.findOne({
+        where: {
+          assignmentId: assignment.id,
+        },
+      })
+
+      if (existingPlan) {
+        await StudyTask.destroy({
+          where: {
+            aiStudyPlanId: existingPlan.id,
+          },
+        })
+
+        await existingPlan.update({
+          summary: analysis.summary,
+          requirements: analysis.requirements,
+        })
+
+        for (const task of analysis.tasks) {
+          await StudyTask.create({
+            aiStudyPlanId: existingPlan.id,
+            title: task.title,
+            description: task.description,
+            estimatedHours: task.estimatedHours,
+            priority: task.priority,
+          })
+        }
+      } else {
+        const newPlan = await AIStudyPlan.create({
+          assignmentId: assignment.id,
+          summary: analysis.summary,
+          requirements: analysis.requirements,
+        })
+
+        for (const task of analysis.tasks) {
+          await StudyTask.create({
+            aiStudyPlanId: newPlan.id,
+            title: task.title,
+            description: task.description,
+            estimatedHours: task.estimatedHours,
+            priority: task.priority,
+          })
+        }
+      }
 
       res.status(200).json({
         message: 'Assignment analyzed successfully',

@@ -175,6 +175,13 @@ function Dashboard({ user, setUser }) {
                     Edit
                   </Link>
 
+                  <Link
+                    to={`/assignments/${assignment.id}/analysis`}
+                    className="self-start rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700"
+                  >
+                    ✨ Analyse with AI
+                  </Link>
+
                   <button
                     onClick={() => handleDelete(assignment)}
                     disabled={deletingId === assignment.id}

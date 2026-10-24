@@ -1,0 +1,107 @@
+[1mdiff --git a/backend/server.js b/backend/server.js[m
+[1mindex eecfcc2..7fddc2e 100644[m
+[1m--- a/backend/server.js[m
+[1m+++ b/backend/server.js[m
+[36m@@ -5,6 +5,7 @@[m [mconst bcrypt = require('bcryptjs')[m
+ const jwt = require('jsonwebtoken')[m
+ const User = require('./models/User')[m
+ const Assignment = require('./models/Assignment')[m
+[32m+[m[32mconst analyzeAssignment = require('./ai/geminiService')[m
+ [m
+ User.hasMany(Assignment, {[m
+   foreignKey: 'userId',[m
+[36m@@ -251,6 +252,94 @@[m [mapp.get('/api/assignments', authenticateToken, async (req, res) => {[m
+   }[m
+ })[m
+ [m
+[32m+[m
+[32m+[m[32mapp.delete('/api/assignments/:id', authenticateToken, async (req, res) => {[m
+[32m+[m[32m  try {[m
+[32m+[m[32m    const assignmentId = Number(req.params.id)[m
+[32m+[m
+[32m+[m[32m    if (!Number.isInteger(assignmentId) || assignmentId <= 0) {[m
+[32m+[m[32m      return res.status(400).json({[m
+[32m+[m[32m        message: 'Invalid assignment ID',[m
+[32m+[m[32m      })[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    const deletedCount = await Assignment.destroy({[m
+[32m+[m[32m      where: {[m
+[32m+[m[32m        id: assignmentId,[m
+[32m+[m[32m        userId: req.user.userId,[m
+[32m+[m[32m      },[m
+[32m+[m[32m    })[m
+[32m+[m
+[32m+[m[32m    if (deletedCount === 0) {[m
+[32m+[m[32m      return res.status(404).json({[m
+[32m+[m[32m        message: 'Assignment not found',[m
+[32m+[m[32m      })[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    return res.status(200).json({[m
+[32m+[m[32m      message: 'Assignment deleted successfully',[m
+[32m+[m[32m    })[m
+[32m+[m[32m  } catch (error) {[m
+[32m+[m[32m    console.error('Delete assignment error:', error)[m
+[32m+[m
+[32m+[m[32m    return res.status(500).json({[m
+[32m+[m[32m      message: 'Something went wrong while deleting the assignment',[m
+[32m+[m[32m    })[m
+[32m+[m[32m  }[m
+[32m+[m[32m})[m
+[32m+[m
+[32m+[m
+[32m+[m[32mapp.post([m
+[32m+[m[32m  '/api/assignments/:id/analyze',[m
+[32m+[m[32m  authenticateToken,[m
+[32m+[m[32m  async (req, res) => {[m
+[32m+[m[32m    console.log('Analyze route reached. Assignment ID:', req.params.id)[m
+[32m+[m[32m    const assignmentId = Number(req.params.id)[m
+[32m+[m
+[32m+[m[32m    if (!Number.isInteger(assignmentId) || assignmentId <= 0) {[m
+[32m+[m[32m      return res.status(400).json({[m
+[32m+[m[32m        message: 'Invalid assignment ID',[m
+[32m+[m[32m      })[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    try {[m
+[32m+[m[32m      // Find the assignment only if it belongs to the logged-in user.[m
+[32m+[m[32m      const assignment = await Assignment.findOne({[m
+[32m+[m[32m        where: {[m
+[32m+[m[32m          id: assignmentId,[m
+[32m+[m[32m          userId: req.user.userId,[m
+[32m+[m[32m        },[m
+[32m+[m[32m      })[m
+[32m+[m
+[32m+[m[32m      if (!assignment) {[m
+[32m+[m[32m        return res.status(404).json({[m
+[32m+[m[32m          message: 'Assignment not found',[m
+[32m+[m[32m        })[m
+[32m+[m[32m      }[m
+[32m+[m
+[32m+[m[32m      // Ask Gemini to analyse the saved assignment.[m
+[32m+[m[32m      const analysis = await analyzeAssignment({[m
+[32m+[m[32m        title: assignment.title,[m
+[32m+[m[32m        brief: assignment.brief,[m
+[32m+[m[32m        dueDate: assignment.dueDate,[m
+[32m+[m[32m      })[m
+[32m+[m
+[32m+[m[32m      res.status(200).json({[m
+[32m+[m[32m        message: 'Assignment analyzed successfully',[m
+[32m+[m[32m        assignmentId: assignment.id,[m
+[32m+[m[32m        analysis,[m
+[32m+[m[32m      })[m
+[32m+[m[32m    } catch (error) {[m
+[32m+[m[32m      console.error('Analyze assignment error:', error)[m
+[32m+[m
+[32m+[m[32m      res.status(502).json({[m
+[32m+[m[32m        message:[m
+[32m+[m[32m          'Unable to analyze this assignment right now. Please try again later.',[m
+[32m+[m[32m      })[m
+[32m+[m[32m    }[m
+[32m+[m[32m  }[m
+[32m+[m[32m)[m
+[32m+[m
+ sequelize[m
+   .authenticate()[m
+   .then(() => {[m

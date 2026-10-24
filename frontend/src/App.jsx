@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import { Routes, Route } from 'react-router-dom'
 import NewAssignment from './pages/NewAssignment'
 import EditAssignment from './pages/EditAssignment'
+import AssignmentAnalysis from './pages/AssignmentAnalysis'
 
 function App() {
   const [isLogin, setIsLogin] = useState(false)
@@ -165,6 +166,11 @@ function App() {
         <Route
           path="/assignments/:id/edit"
           element={<EditAssignment />}
+        />
+        
+        <Route
+          path="/assignments/:id/analysis"
+          element={<AssignmentAnalysis />}
         />
       </Routes>
     )
