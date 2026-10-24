@@ -340,6 +340,55 @@ app.post(
   }
 )
 
+app.put('/api/assignments/:id', authenticateToken, async (req, res) => {
+  try {
+    const assignmentId = Number(req.params.id)
+    const { title, brief, dueDate } = req.body
+
+    if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
+      return res.status(400).json({
+        message: 'Invalid assignment ID',
+      })
+    }
+
+    if (!title || !brief || !dueDate) {
+      return res.status(400).json({
+        message: 'Title, brief and due date are required',
+      })
+    }
+
+    const assignment = await Assignment.findOne({
+      where: {
+        id: assignmentId,
+        userId: req.user.userId,
+      },
+    })
+
+    if (!assignment) {
+      return res.status(404).json({
+        message: 'Assignment not found',
+      })
+    }
+
+    assignment.title = title
+    assignment.brief = brief
+    assignment.dueDate = dueDate
+
+    await assignment.save()
+
+    res.status(200).json({
+      message: 'Assignment updated successfully',
+      assignment,
+    })
+  } catch (error) {
+    console.error('Update assignment error:', error)
+
+    res.status(500).json({
+      message: 'Something went wrong while updating the assignment',
+    })
+  }
+})
+
 sequelize
   .authenticate()
   .then(() => {

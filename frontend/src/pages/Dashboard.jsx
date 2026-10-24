@@ -168,6 +168,13 @@ function Dashboard({ user, setUser }) {
                     </p>
                   </div>
 
+                  <Link
+                    to={`/assignments/${assignment.id}/edit`}
+                    className="self-start rounded-lg border border-indigo-200 px-4 py-2 font-medium text-indigo-600 hover:bg-indigo-50"
+                  >
+                    Edit
+                  </Link>
+
                   <button
                     onClick={() => handleDelete(assignment)}
                     disabled={deletingId === assignment.id}
