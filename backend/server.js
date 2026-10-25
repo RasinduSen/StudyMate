@@ -308,6 +308,72 @@ app.delete('/api/assignments/:id', authenticateToken, async (req, res) => {
   }
 })
 
+app.get(
+  '/api/assignments/:id/study-plan',
+  authenticateToken,
+  async (req, res) => {
+    try {
+      const assignmentId = Number(req.params.id)
+
+      if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
+        return res.status(400).json({
+          message: 'Invalid assignment ID',
+        })
+      }
+
+      const assignment = await Assignment.findOne({
+        where: {
+          id: assignmentId,
+          userId: req.user.userId,
+        },
+      })
+
+      if (!assignment) {
+        return res.status(404).json({
+          message: 'Assignment not found',
+        })
+      }
+
+      const plan = await AIStudyPlan.findOne({
+        where: {
+          assignmentId: assignment.id,
+        },
+        include: [
+          {
+            model: StudyTask,
+          },
+        ],
+      })
+
+      if (!plan) {
+        return res.status(404).json({
+          message: 'No saved study plan found',
+        })
+      }
+
+      res.status(200).json({
+        studyPlan: {
+          summary: plan.summary,
+          requirements: plan.requirements,
+          tasks: plan.StudyTasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            estimatedHours: task.estimatedHours,
+            priority: task.priority,
+            status: task.status,
+          })),
+        },
+      })
+    } catch (error) {
+      console.error('Get study plan error:', error)
+
+      res.status(500).json({
+        message: 'Unable to load the saved study plan',
+      })
+    }
+  }
+)
 
 app.post(
   '/api/assignments/:id/analyze',
@@ -404,6 +470,63 @@ app.post(
     }
   }
 )
+
+app.put('/api/study-tasks/:id/status', authenticateToken, async (req, res) => {
+  try {
+    const taskId = Number(req.params.id)
+    const { status } = req.body
+
+    const allowedStatuses = [
+      'not_started',
+      'in_progress',
+      'completed',
+    ]
+
+    if (!Number.isInteger(taskId) || taskId <= 0) {
+      return res.status(400).json({
+        message: 'Invalid task ID',
+      })
+    }
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: 'Invalid task status',
+      })
+    }
+
+    const task = await StudyTask.findByPk(taskId, {
+      include: {
+        model: AIStudyPlan,
+        include: {
+          model: Assignment,
+          where: {
+            userId: req.user.userId,
+          },
+        },
+      },
+    })
+
+    if (!task) {
+      return res.status(404).json({
+        message: 'Study task not found',
+      })
+    }
+
+    task.status = status
+    await task.save()
+
+    res.status(200).json({
+      message: 'Task status updated successfully',
+      task,
+    })
+  } catch (error) {
+    console.error('Update task status error:', error)
+
+    res.status(500).json({
+      message: 'Something went wrong while updating the task',
+    })
+  }
+})
 
 app.put('/api/assignments/:id', authenticateToken, async (req, res) => {
   try {
