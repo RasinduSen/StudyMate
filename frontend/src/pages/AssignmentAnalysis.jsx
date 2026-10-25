@@ -90,6 +90,59 @@ function AssignmentAnalysis() {
         }
     }
 
+    const handleRecalculate = async () => {
+        const confirmed = window.confirm(
+            'Recalculate this study plan? The current tasks and their progress may be reset.'
+        )
+
+        if (!confirmed) return
+
+        try {
+            setLoading(true)
+            setError('')
+
+            const token = localStorage.getItem('token')
+
+            const response = await fetch(
+                `http://localhost:5000/api/assignments/${id}/analyze`,
+                {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            )
+
+            const data = await response.json()
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to recalculate the study plan.')
+            }
+
+            // Reload the saved plan so tasks include their database IDs and statuses.
+            const savedResponse = await fetch(
+                `http://localhost:5000/api/assignments/${id}/study-plan`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            )
+
+            const savedData = await savedResponse.json()
+
+            if (!savedResponse.ok) {
+                throw new Error(savedData.message || 'Could not reload the saved study plan.')
+            }
+
+            setAnalysis(savedData.studyPlan)
+        } catch (error) {
+            setError(error.message || 'Something went wrong. Please try again.')
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
         <main className="min-h-screen bg-slate-100 px-6 py-10">
             <div className="mx-auto max-w-4xl">
@@ -133,12 +186,15 @@ function AssignmentAnalysis() {
                             {error}
                         </p>
 
+
                         <button
-                            onClick={() => window.location.reload()}
-                            className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700"
+                            onClick={handleRecalculate}
+                            disabled={loading}
+                            className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            Try Again
+                            {loading ? 'Generating Analysis...' : 'Try Again'}
                         </button>
+
                     </section>
                 )}
 
@@ -172,6 +228,14 @@ function AssignmentAnalysis() {
                             <h2 className="text-xl font-semibold text-gray-900">
                                 Suggested Study Tasks
                             </h2>
+
+                            <button
+                                onClick={handleRecalculate}
+                                disabled={loading}
+                                className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 font-medium text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Recalculate Study Plan
+                            </button>
 
                             <p className="mt-2 text-sm text-gray-500">
                                 Your saved study plan. Task progress is stored automatically.
