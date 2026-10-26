@@ -481,6 +481,7 @@ app.put('/api/study-tasks/:id/status', authenticateToken, async (req, res) => {
       'not_started',
       'in_progress',
       'completed',
+      'couldnt_complete',
     ]
 
     if (!Number.isInteger(taskId) || taskId <= 0) {

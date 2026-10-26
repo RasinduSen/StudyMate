@@ -42,7 +42,8 @@ const StudyTask = sequelize.define(
       type: DataTypes.ENUM(
         'not_started',
         'in_progress',
-        'completed'
+        'completed',
+        'couldnt_complete'
       ),
       allowNull: false,
       defaultValue: 'not_started',

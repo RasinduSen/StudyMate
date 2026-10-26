@@ -290,6 +290,7 @@ function AssignmentAnalysis() {
                                                 <option value="not_started">Not Started</option>
                                                 <option value="in_progress">In Progress</option>
                                                 <option value="completed">Completed</option>
+                                                <option value="couldnt_complete">Couldn't Complete</option>
                                             </select>
                                         </div>
 
