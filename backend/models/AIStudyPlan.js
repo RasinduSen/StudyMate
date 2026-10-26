@@ -24,6 +24,11 @@ const AIStudyPlan = sequelize.define(
             type: DataTypes.JSON,
             allowNull: false,
         },
+        adaptationExplanation: {
+            type: DataTypes.TEXT,
+            allowNull: true,
+            field: 'adaptation_explanation',
+        },
     },
     {
         tableName: 'ai_study_plans',

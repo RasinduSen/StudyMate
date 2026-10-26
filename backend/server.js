@@ -1,4 +1,5 @@
 const express = require('express')
+const { Op } = require('sequelize')
 const cors = require('cors')
 const sequelize = require('./config/database')
 const bcrypt = require('bcryptjs')
@@ -355,6 +356,7 @@ app.get(
       res.status(200).json({
         studyPlan: {
           summary: plan.summary,
+          adaptationExplanation: plan.adaptationExplanation,
           requirements: plan.requirements,
           tasks: plan.StudyTasks.map((task) => ({
             id: task.id,
@@ -382,10 +384,19 @@ app.post(
   async (req, res) => {
     console.log('Analyze route reached. Assignment ID:', req.params.id)
     const assignmentId = Number(req.params.id)
-
+    const usableStudyHours = Number(req.body.usableStudyHours)
     if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
       return res.status(400).json({
         message: 'Invalid assignment ID',
+      })
+    }
+    if (
+      !Number.isFinite(usableStudyHours) ||
+      usableStudyHours <= 0 ||
+      usableStudyHours > 500
+    ) {
+      return res.status(400).json({
+        message: 'Available study hours must be greater than 0 and no more than 500',
       })
     }
 
@@ -404,32 +415,95 @@ app.post(
         })
       }
 
-      // Ask Gemini to analyse the saved assignment.
-      const analysis = await analyzeAssignment({
-        title: assignment.title,
-        brief: assignment.brief,
-        dueDate: assignment.dueDate,
-      })
 
+      // Load the existing study plan and its tasks before recalculating.
       const existingPlan = await AIStudyPlan.findOne({
         where: {
           assignmentId: assignment.id,
         },
       })
 
+      const existingTasks = existingPlan
+        ? await StudyTask.findAll({
+          where: {
+            aiStudyPlanId: existingPlan.id,
+          },
+          attributes: [
+            'id',
+            'title',
+            'description',
+            'estimatedHours',
+            'priority',
+            'status',
+          ],
+        })
+        : []
+
+
+      const currentTime = new Date()
+
+      const deadline = new Date(
+        `${assignment.dueDate}T${assignment.dueTime || '00:00:00'}`
+      )
+
+      const remainingMilliseconds = deadline.getTime() - currentTime.getTime()
+
+      const remainingTime =
+        remainingMilliseconds > 0
+          ? `${(remainingMilliseconds / (1000 * 60 * 60)).toFixed(2)} hours`
+          : 'Deadline has passed'
+
+      const completedTasks = existingTasks.filter(
+        (task) => task.status === 'completed'
+      )
+
+
+      // Ask Gemini to analyse the assignment using the current task progress.
+
+      const analysis = await analyzeAssignment({
+        title: assignment.title,
+        brief: assignment.brief,
+        dueDate: assignment.dueDate,
+        dueTime: assignment.dueTime,
+        currentTime: currentTime.toISOString(),
+        remainingTime,
+        usableStudyHours,
+        existingTasks: existingTasks.map((task) => task.toJSON()),
+      })
+
+
+      let savedPlan
+
       if (existingPlan) {
+        // Delete only unfinished tasks. Completed tasks keep their IDs and statuses.
         await StudyTask.destroy({
           where: {
             aiStudyPlanId: existingPlan.id,
+            status: {
+              [Op.ne]: 'completed',
+            },
           },
         })
 
         await existingPlan.update({
           summary: analysis.summary,
           requirements: analysis.requirements,
+          adaptationExplanation: analysis.adaptationExplanation,
         })
 
+        // Create only tasks that are not duplicates of completed tasks.
         for (const task of analysis.tasks) {
+          const newTaskTitle = (task.title || '').trim().toLowerCase()
+
+          const duplicatesCompletedTask = completedTasks.some(
+            (completedTask) =>
+              (completedTask.title || '').trim().toLowerCase() === newTaskTitle
+          )
+
+          if (!newTaskTitle || duplicatesCompletedTask) {
+            continue
+          }
+
           await StudyTask.create({
             aiStudyPlanId: existingPlan.id,
             title: task.title,
@@ -438,16 +512,19 @@ app.post(
             priority: task.priority,
           })
         }
+
+        savedPlan = existingPlan
       } else {
-        const newPlan = await AIStudyPlan.create({
+        savedPlan = await AIStudyPlan.create({
           assignmentId: assignment.id,
           summary: analysis.summary,
           requirements: analysis.requirements,
+          adaptationExplanation: analysis.adaptationExplanation,
         })
 
         for (const task of analysis.tasks) {
           await StudyTask.create({
-            aiStudyPlanId: newPlan.id,
+            aiStudyPlanId: savedPlan.id,
             title: task.title,
             description: task.description,
             estimatedHours: task.estimatedHours,
@@ -456,10 +533,29 @@ app.post(
         }
       }
 
+      const savedTasks = await StudyTask.findAll({
+        where: {
+          aiStudyPlanId: savedPlan.id,
+        },
+        order: [['id', 'ASC']],
+      })
+
       res.status(200).json({
         message: 'Assignment analyzed successfully',
         assignmentId: assignment.id,
-        analysis,
+        analysis: {
+          summary: savedPlan.summary,
+          adaptationExplanation: savedPlan.adaptationExplanation,
+          requirements: savedPlan.requirements,
+          tasks: savedTasks.map((task) => ({
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            estimatedHours: task.estimatedHours,
+            priority: task.priority,
+            status: task.status,
+          })),
+        },
       })
     } catch (error) {
       console.error('Analyze assignment error:', error)

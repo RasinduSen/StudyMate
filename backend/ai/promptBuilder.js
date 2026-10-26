@@ -14,7 +14,41 @@ ${assignment.brief}
 DUE DATE:
 ${assignment.dueDate}
 
+DUE TIME:
+${assignment.dueTime || '00:00'}
+
+CURRENT TIME:
+${assignment.currentTime || 'Not provided'}
+
+TIME REMAINING UNTIL DEADLINE:
+${assignment.remainingTime || 'Not calculated'}
+
+STUDENT'S AVAILABLE STUDY HOURS:
+${assignment.usableStudyHours ?? 'Not provided'}
+
+EXISTING TASKS AND THEIR STATUSES:
+${JSON.stringify(assignment.existingTasks || [], null, 2)}
+
 Analyse the assignment carefully.
+
+If existing tasks are provided, this is an adaptive recalculation.
+Follow these rules:
+1. Preserve completed work. Do not ask the student to repeat completed tasks.
+- The tasks array must contain only remaining work. Never include tasks
+  that are already marked completed in the existing tasks list.
+- Do not recreate a completed task under a different title or description.
+- Treat completed tasks as finished work, not as tasks needing to be done again.
+2. Reassess tasks marked "couldnt_complete" and adjust their scope,
+   difficulty, or approach where appropriate.
+3. Account for work already completed and tasks currently in progress.
+4. Prioritize the most important remaining requirements.
+5. Fit the remaining work within the student's available study hours
+   and the time remaining until the deadline.
+6. If the available time is insufficient, explain the trade-offs and
+   prioritize essential requirements instead of pretending everything
+   can be completed.
+7. Do not invent completed work or assume a task is finished unless
+   its status says "completed".
 
 Identify:
 1. The main goal of the assignment.
@@ -32,6 +66,7 @@ Return the result as valid JSON using exactly this structure:
 
 {
   "summary": "Short summary of the assignment",
+  "adaptationExplanation": "Explain what changed in this plan and why",
   "requirements": [
     "Requirement 1",
     "Requirement 2"
@@ -45,6 +80,10 @@ Return the result as valid JSON using exactly this structure:
     }
   ]
 }
+
+The adaptationExplanation must briefly explain how the plan accounts
+for completed tasks, unfinished tasks, the available study hours, and
+the deadline. If this is the first plan, explain the planning approach.
 
 The priority must be one of:
 "low", "medium", "high".

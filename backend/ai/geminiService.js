@@ -24,6 +24,7 @@ async function analyzeAssignment(assignment) {
         type: 'OBJECT',
         properties: {
           summary: { type: 'STRING' },
+          adaptationExplanation: { type: 'STRING' },
           requirements: {
             type: 'ARRAY',
             items: { type: 'STRING' },
@@ -50,7 +51,7 @@ async function analyzeAssignment(assignment) {
             },
           },
         },
-        required: ['summary', 'requirements', 'tasks'],
+        required: ['summary', 'adaptationExplanation', 'requirements', 'tasks'],
       },
     },
   })
@@ -63,6 +64,7 @@ async function analyzeAssignment(assignment) {
 
   if (
     typeof result.summary !== 'string' ||
+    typeof result.adaptationExplanation !== 'string' ||
     !Array.isArray(result.requirements) ||
     !Array.isArray(result.tasks) ||
     result.tasks.some(
