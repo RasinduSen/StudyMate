@@ -9,10 +9,10 @@ const Assignment = sequelize.define(
       autoIncrement: true,
       primaryKey: true,
     },
-    userId:{
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        field: 'user_id'
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: 'user_id'
     },
 
     title: {
@@ -29,6 +29,12 @@ const Assignment = sequelize.define(
       type: DataTypes.DATEONLY,
       allowNull: false,
       field: 'due_date',
+    },
+
+    dueTime: {
+      type: DataTypes.TIME,
+      allowNull: true,
+      field: 'due_time',
     },
   },
   {

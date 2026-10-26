@@ -8,6 +8,7 @@ function EditAssignment() {
     const [title, setTitle] = useState('')
     const [brief, setBrief] = useState('')
     const [dueDate, setDueDate] = useState('')
+    const [dueTime, setDueTime] = useState('')
     const [message, setMessage] = useState('')
     const [isLoading, setIsLoading] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
@@ -44,6 +45,7 @@ function EditAssignment() {
                 setTitle(assignment.title)
                 setBrief(assignment.brief)
                 setDueDate(assignment.dueDate)
+                setDueTime(assignment.dueTime || '00:00')
             } catch (error) {
                 console.error('Get assignment error:', error)
                 setMessage(error.message || 'Could not load assignment.')
@@ -76,6 +78,7 @@ function EditAssignment() {
                         title,
                         brief,
                         dueDate,
+                        dueTime,
                     }),
                 }
             )
@@ -126,8 +129,8 @@ function EditAssignment() {
                     <p
                         role="status"
                         className={`mt-6 rounded-lg p-4 ${message.includes('successfully')
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
                             }`}
                     >
                         {message}
@@ -173,6 +176,20 @@ function EditAssignment() {
                             required
                             value={dueDate}
                             onChange={(event) => setDueDate(event.target.value)}
+                            className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 outline-none focus:border-indigo-500"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">
+                            Due Time
+                        </label>
+
+                        <input
+                            type="time"
+                            required
+                            value={dueTime}
+                            onChange={(event) => setDueTime(event.target.value)}
                             className="mt-2 w-full rounded-lg border border-gray-300 bg-white px-4 py-3 outline-none focus:border-indigo-500"
                         />
                     </div>

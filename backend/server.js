@@ -223,7 +223,7 @@ app.get('/api/auth/me', authenticateToken, async (req, res) => {
 
 app.post('/api/assignments', authenticateToken, async (req, res) => {
   try {
-    const { title, brief, dueDate } = req.body
+    const { title, brief, dueDate, dueTime } = req.body
 
     if (!title || !brief || !dueDate) {
       return res.status(400).json({
@@ -236,6 +236,7 @@ app.post('/api/assignments', authenticateToken, async (req, res) => {
       title,
       brief,
       dueDate,
+      dueTime: dueTime || '00:00',
     })
 
     res.status(201).json({
@@ -531,7 +532,7 @@ app.put('/api/study-tasks/:id/status', authenticateToken, async (req, res) => {
 app.put('/api/assignments/:id', authenticateToken, async (req, res) => {
   try {
     const assignmentId = Number(req.params.id)
-    const { title, brief, dueDate } = req.body
+    const { title, brief, dueDate, dueTime } = req.body
 
     if (!Number.isInteger(assignmentId) || assignmentId <= 0) {
       return res.status(400).json({
@@ -561,6 +562,7 @@ app.put('/api/assignments/:id', authenticateToken, async (req, res) => {
     assignment.title = title
     assignment.brief = brief
     assignment.dueDate = dueDate
+    assignment.dueTime = dueTime || '00:00'
 
     await assignment.save()
 
