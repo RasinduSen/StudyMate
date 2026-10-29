@@ -167,7 +167,7 @@ function App() {
           path="/assignments/:id/edit"
           element={<EditAssignment />}
         />
-        
+
         <Route
           path="/assignments/:id/analysis"
           element={<AssignmentAnalysis />}
@@ -182,9 +182,11 @@ function App() {
       <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-md">
 
         {/* Logo / Title */}
-        <h1 className="text-center text-4xl font-bold text-indigo-600">
-          StudyMate
+
+        <h1 className="text-2xl font-bold text-center">
+          <span className="text-black">Study</span><span className="text-indigo-600">Mate</span>
         </h1>
+
 
         {/* Subtitle */}
         <p className="mt-2 text-center text-gray-600">
