@@ -20,7 +20,7 @@ function NewAssignment() {
             const token = localStorage.getItem('token')
 
             const response = await fetch(
-                '${API_URL}/api/assignments',
+                `${API_URL}/api/assignments`,
                 {
                     method: 'POST',
                     headers: {
