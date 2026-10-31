@@ -5,6 +5,7 @@ import { Routes, Route } from 'react-router-dom'
 import NewAssignment from './pages/NewAssignment'
 import EditAssignment from './pages/EditAssignment'
 import AssignmentAnalysis from './pages/AssignmentAnalysis'
+import { API_URL } from "./config/api";
 
 function App() {
   const [isLogin, setIsLogin] = useState(false)

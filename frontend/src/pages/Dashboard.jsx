@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { API_URL } from '../config/api'
 
 
 function Dashboard({ user, setUser }) {
@@ -18,7 +19,7 @@ function Dashboard({ user, setUser }) {
         const token = localStorage.getItem('token')
 
         const response = await fetch(
-          '${API_URL}/api/assignments',
+          `${API_URL}/api/assignments`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
