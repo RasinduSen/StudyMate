@@ -23,7 +23,7 @@ function AssignmentAnalysis() {
                 }
 
                 const response = await fetch(
-                    `http://localhost:5000/api/assignments/${id}/study-plan`,
+                    `${API_URL}/api/assignments/${id}/study-plan`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -57,7 +57,7 @@ function AssignmentAnalysis() {
             const token = localStorage.getItem('token')
 
             const response = await fetch(
-                `http://localhost:5000/api/study-tasks/${taskId}/status`,
+                `${API_URL}/api/study-tasks/${taskId}/status`,
                 {
                     method: 'PUT',
                     headers: {
@@ -114,7 +114,7 @@ function AssignmentAnalysis() {
             const token = localStorage.getItem('token')
 
             const response = await fetch(
-                `http://localhost:5000/api/assignments/${id}/analyze`,
+                `${API_URL}/api/assignments/${id}/analyze`,
                 {
                     method: 'POST',
                     headers: {
@@ -135,7 +135,7 @@ function AssignmentAnalysis() {
 
             // Reload the saved plan so tasks include their database IDs and statuses.
             const savedResponse = await fetch(
-                `http://localhost:5000/api/assignments/${id}/study-plan`,
+                `${API_URL}/api/assignments/${id}/study-plan`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

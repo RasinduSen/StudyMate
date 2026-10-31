@@ -24,10 +24,9 @@ function App() {
       if (!token) {
         return
       }
-
       try {
         const response = await fetch(
-          'http://localhost:5000/api/auth/me',
+          '${API_URL}/api/auth/me',
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -64,7 +63,7 @@ function App() {
 
     try {
       const response = await fetch(
-        'http://localhost:5000/api/auth/register',
+        '${API_URL}/api/auth/register',
         {
           method: 'POST',
           headers: {
@@ -106,7 +105,7 @@ function App() {
 
     try {
       const response = await fetch(
-        'http://localhost:5000/api/auth/login',
+        '${API_URL}/api/auth/login',
         {
           method: 'POST',
           headers: {

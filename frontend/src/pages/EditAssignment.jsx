@@ -19,7 +19,7 @@ function EditAssignment() {
                 const token = localStorage.getItem('token')
 
                 const response = await fetch(
-                    `http://localhost:5000/api/assignments`,
+                    `${API_URL}/api/assignments`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ function EditAssignment() {
             const token = localStorage.getItem('token')
 
             const response = await fetch(
-                `http://localhost:5000/api/assignments/${id}`,
+                `${API_URL}/api/assignments/${id}`,
                 {
                     method: 'PUT',
                     headers: {

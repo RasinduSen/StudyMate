@@ -37,7 +37,7 @@ StudyTask.belongsTo(AIStudyPlan, {
 })
 
 const app = express()
-const PORT = 5000
+const PORT = process.env.PORT || 5000
 
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers.authorization
@@ -69,7 +69,11 @@ const authenticateToken = (req, res, next) => {
   }
 }
 
-app.use(cors())
+app.use(cors({
+  origin: 'https://studymate-ars.netlify.app',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}))
 app.use(express.json())
 
 app.get('/', (req, res) => {
@@ -689,7 +693,7 @@ sequelize
     console.log('Database tables synchronized')
 
     app.listen(PORT, () => {
-      console.log(`StudyMate server running on http://localhost:${PORT}`)
+      console.log(`StudyMate server running on port ${PORT}`)
     })
   })
   .catch((error) => {
