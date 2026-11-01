@@ -69,8 +69,13 @@ const authenticateToken = (req, res, next) => {
   }
 }
 
+const allowedOrigins = [
+  'https://studymate-ars.netlify.app',
+  'http://localhost:5173',
+]
+
 app.use(cors({
-  origin: 'https://studymate-ars.netlify.app',
+  origin: allowedOrigins,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }))
